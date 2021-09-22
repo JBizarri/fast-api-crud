@@ -17,7 +17,7 @@ Install all dependencies:
 
 Run uvicorn:
 
-`$ uvircorn app:app --reload`
+`$ uvicorn app:app --reload`
 
 The `reload` flag will reload the server on any file changes and is optional.
 
@@ -29,6 +29,6 @@ If you wish to change the connection string:
 
 `$ export SQL_URL='sqlite://'`
 
-Then re-run uviron
+Then re-run uvicorn
 
-`$ uvircorn app:app --reload`
+`$ uvicorn app:app --reload`
