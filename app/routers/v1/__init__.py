@@ -1,16 +1,18 @@
+import sys
+
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 
-from . import endpoints
 from .containers import Container
+from .endpoints import include_routers
 
 container = Container()
-container.wire(packages=[endpoints])
+container.wire(packages=[sys.modules[__name__]])
 
 v1 = FastAPI()
-endpoints.include_routers(v1)
+include_routers(v1)
 
 
 @v1.exception_handler(RequestValidationError)

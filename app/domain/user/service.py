@@ -26,7 +26,11 @@ class UserService:
         if not self.company_service.read_one(session, user_in.company_id):
             raise CompanyNotFound(f"Company {user_in.company_id} was not found")
 
-        user = User(**user_in.dict(), status=UserStatus.PENDING)
+        user_dict = user_in.dict()
+        hashed_password = User.generate_password(user_dict.pop("password"))
+        user_dict["password"] = hashed_password
+
+        user = User(**user_dict, status=UserStatus.PENDING)
         return self.repository.create(session, user)
 
     def read_one(self, session: Session, id: int) -> User:

@@ -19,3 +19,7 @@ class UserRepository(BaseRepository[User]):
             query = query.where(User.status == status)
 
         return session.execute(query).unique().scalars().all()
+
+    def one_by_email(self, session: Session, email: str) -> User:
+        query = select(User).where(User.email == email)
+        return session.execute(query).unique().scalar_one_or_none()

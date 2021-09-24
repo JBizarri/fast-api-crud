@@ -1,6 +1,7 @@
 import enum
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+import bcrypt
+from sqlalchemy import Column, Enum, ForeignKey, Integer, LargeBinary, String
 from sqlalchemy.orm import relationship
 
 from ...database import Base
@@ -23,8 +24,15 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     username = Column(Integer)
-    password = Column(String)
-    status = Column(Enum(UserStatus))
+    password = Column(LargeBinary)
+    status = Column(Enum(UserStatus), nullable=False)
 
     company_id = Column(Integer, ForeignKey("company.id"))
     company = relationship("Company", back_populates="users", lazy=False)
+
+    @staticmethod
+    def generate_password(password: str) -> bytes:
+        return bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt())
+
+    def check_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode("utf8"), self.password)

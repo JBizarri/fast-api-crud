@@ -8,9 +8,14 @@ from .....database import get_session
 from .....domain.company.service import CompanyService
 from ...containers import Container
 from ...responses import UNPROCESSABLE_ENTITY, HttpError, HttpSuccess
+from ...security import JwtBearer
 from .schemas import CompanyOutput, CompanyPost, CompanyPut
 
-router = APIRouter(tags=["companies"])
+router = APIRouter(
+    tags=["companies"],
+    dependencies=[Depends(JwtBearer())],
+    responses={401: {"model": HttpError}},
+)
 
 
 @router.get("/companies", response_model=List[CompanyOutput])

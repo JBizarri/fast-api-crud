@@ -8,9 +8,14 @@ from .....database import get_session
 from .....domain.user.service import UserService
 from ...containers import Container
 from ...responses import UNPROCESSABLE_ENTITY, HttpError, HttpSuccess
+from ...security import JwtBearer
 from .schemas import UserOutput, UserPost, UserPut, UserStatus
 
-router = APIRouter(tags=["users"])
+router = APIRouter(
+    tags=["users"],
+    dependencies=[Depends(JwtBearer())],
+    responses={401: {"model": HttpError}},
+)
 
 
 @router.get("/users", response_model=List[UserOutput], responses=UNPROCESSABLE_ENTITY)
