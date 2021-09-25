@@ -1,10 +1,13 @@
 from typing import List, Optional
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Body, Depends, Path, Query
+from fastapi import APIRouter, Body, Depends, Path, Query, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from .....database import get_session
+from .....domain.company.exceptions import CompanyNotFound
+from .....domain.user.exceptions import InvalidUsername, UserNotFound
 from .....domain.user.service import UserService
 from ...containers import Container
 from ...responses import UNPROCESSABLE_ENTITY, HttpError, HttpSuccess
@@ -31,7 +34,11 @@ async def read_users(
 @router.post(
     "/users",
     response_model=UserOutput,
-    responses={**UNPROCESSABLE_ENTITY, 404: {"model": HttpError}},
+    responses={
+        **UNPROCESSABLE_ENTITY,
+        404: {"model": HttpError},
+        422: {"model": HttpError},
+    },
 )
 @inject
 async def create_user(
@@ -39,7 +46,17 @@ async def create_user(
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
 ):
-    return user_service.create(session, user)
+    try:
+        return user_service.create(session, user)
+    except InvalidUsername as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Invalid username, please try another.",
+        ) from exc
+    except CompanyNotFound as exc:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Company was not found."
+        ) from exc
 
 
 @router.get(
@@ -53,7 +70,10 @@ async def read_user(
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
 ):
-    return user_service.read_one(session, user_id)
+    try:
+        return user_service.read_one(session, user_id)
+    except UserNotFound as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User was not found.") from exc
 
 
 @router.put(
@@ -68,7 +88,15 @@ async def update_user(
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
 ):
-    return user_service.update(session, user_id, user)
+    try:
+        return user_service.update(session, user_id, user)
+    except InvalidUsername as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Invalid username, please try another.",
+        ) from exc
+    except UserNotFound as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User was not found.") from exc
 
 
 @router.delete(
@@ -82,5 +110,9 @@ async def delete_user(
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
 ):
-    user_service.delete(session, user_id)
-    return HttpSuccess(message="OK")
+    try:
+        user_service.delete(session, user_id)
+    except UserNotFound as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User was not found.") from exc
+    else:
+        return HttpSuccess(message="OK")

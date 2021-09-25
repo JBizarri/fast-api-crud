@@ -1,10 +1,12 @@
 from typing import List
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from .....database import get_session
+from .....domain.company.exceptions import CompanyNotFound, InvalidCompanyName
 from .....domain.company.service import CompanyService
 from ...containers import Container
 from ...responses import UNPROCESSABLE_ENTITY, HttpError, HttpSuccess
@@ -34,7 +36,12 @@ async def create_company(
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
 ):
-    return company_service.create(session, company)
+    try:
+        return company_service.create(session, company)
+    except InvalidCompanyName as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "Invalid name, please try another."
+        ) from exc
 
 
 @router.get(
@@ -48,7 +55,12 @@ async def read_company(
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
 ):
-    return company_service.read_one(session, company_id)
+    try:
+        return company_service.read_one(session, company_id)
+    except CompanyNotFound as exc:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Company was not found."
+        ) from exc
 
 
 @router.put(
@@ -63,7 +75,16 @@ async def update_company(
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
 ):
-    return company_service.update(session, company_id, company)
+    try:
+        return company_service.update(session, company_id, company)
+    except CompanyNotFound as exc:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Company was not found."
+        ) from exc
+    except InvalidCompanyName as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "Invalid name, please try another."
+        ) from exc
 
 
 @router.delete(
@@ -77,5 +98,11 @@ async def delete_company(
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
 ):
-    company_service.delete(session, company_id)
-    return HttpSuccess(message="OK")
+    try:
+        company_service.delete(session, company_id)
+    except CompanyNotFound as exc:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Company was not found."
+        ) from exc
+    else:
+        return HttpSuccess(message="OK")
