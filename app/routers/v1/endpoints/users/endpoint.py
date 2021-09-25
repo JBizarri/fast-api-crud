@@ -8,12 +8,12 @@ from .....database import get_session
 from .....domain.user.service import UserService
 from ...containers import Container
 from ...responses import UNPROCESSABLE_ENTITY, HttpError, HttpSuccess
-from ...security import JwtBearer
+from ...security import BearerToken
 from .schemas import UserOutput, UserPost, UserPut, UserStatus
 
 router = APIRouter(
     tags=["users"],
-    dependencies=[Depends(JwtBearer())],
+    dependencies=[Depends(BearerToken())],
     responses={401: {"model": HttpError}},
 )
 

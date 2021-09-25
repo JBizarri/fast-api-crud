@@ -8,4 +8,3 @@ class UserLoginPost(BaseModel):
 
 class TokenOutput(BaseModel):
     token: str
-    type: str

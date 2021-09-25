@@ -16,3 +16,8 @@ class UserUpdate(Protocol):
 
     def dict(self) -> Dict[str, Any]:
         pass
+
+
+class UserLogin(Protocol):
+    email: str
+    password: str

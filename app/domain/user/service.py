@@ -1,26 +1,30 @@
 from typing import List, Optional
 
+import arrow
 from sqlalchemy.orm import Session
 
 from ..company.exceptions import CompanyNotFound
 from ..company.service import CompanyService
-from .exceptions import InvalidUsername, UserNotFound
-from .interfaces import UserCreate, UserUpdate
+from .auth import JwtToken
+from .exceptions import InvalidUsername, LoginException, UserNotFound
+from .interfaces import UserCreate, UserLogin, UserUpdate
 from .models import User, UserStatus
 from .repository import UserRepository
 
 
 class UserService:
     def __init__(
-        self, repository: UserRepository, company_service: CompanyService
+        self,
+        user_repository: UserRepository,
+        company_service: CompanyService,
     ) -> None:
-        self.repository = repository
+        self.user_repository = user_repository
         self.company_service = company_service
 
     def read_all(
         self, session: Session, status: Optional[UserStatus] = None
     ) -> List[User]:
-        return self.repository.all_with_filters(session, status=status)
+        return self.user_repository.all_with_filters(session, status=status)
 
     def create(self, session: Session, user_in: UserCreate) -> User:
         if not self.company_service.read_one(session, user_in.company_id):
@@ -31,16 +35,16 @@ class UserService:
         user_dict["password"] = hashed_password
 
         user = User(**user_dict, status=UserStatus.PENDING)
-        return self.repository.create(session, user)
+        return self.user_repository.create(session, user)
 
     def read_one(self, session: Session, id: int) -> User:
-        if not (user := self.repository.one(session, id)):
+        if not (user := self.user_repository.one(session, id)):
             raise UserNotFound(f"User {id} was not found.")
 
         return user
 
     def update(self, session: Session, id: int, user_in: UserUpdate) -> User:
-        if not self.repository.one(session, id):
+        if not self.user_repository.one(session, id):
             raise UserNotFound(f"User {id} was not found.")
 
         if user_in.username == "admin":
@@ -50,10 +54,21 @@ class UserService:
             raise InvalidUsername("Username can't be empty, please try another.")
 
         user = User(**user_in.dict())
-        return self.repository.replace(session, id, user)
+        return self.user_repository.replace(session, id, user)
 
     def delete(self, session: Session, id: int) -> None:
-        if not self.repository.one(session, id):
+        if not self.user_repository.one(session, id):
             raise UserNotFound(f"User {id} was not found.")
 
-        self.repository.delete(session, id)
+        self.user_repository.delete(session, id)
+
+    def authenticate(self, session: Session, login_info: UserLogin) -> JwtToken:
+        if not (user := self.user_repository.one_by_email(session, login_info.email)):
+            raise LoginException("You have entered an invalid email or password")
+
+        if not user.check_password(login_info.password):
+            raise LoginException("You have entered an invalid email or password")
+
+        payload = {"user_id": user.id}
+        expiration = arrow.utcnow().shift(minutes=30)
+        return JwtToken.generate_token(payload, expiration=expiration)

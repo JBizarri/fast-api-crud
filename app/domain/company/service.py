@@ -9,34 +9,34 @@ from .repository import CompanyRepository
 
 
 class CompanyService:
-    def __init__(self, repository: CompanyRepository) -> None:
-        self.repository = repository
+    def __init__(self, company_repository: CompanyRepository) -> None:
+        self.company_repository = company_repository
 
     def read_all(self, session: Session) -> List[Company]:
-        return self.repository.all(session)
+        return self.company_repository.all(session)
 
     def create(self, session: Session, company_in: CompanyCreate) -> Company:
         company = Company(**company_in.dict())
-        return self.repository.create(session, company)
+        return self.company_repository.create(session, company)
 
     def read_one(self, session: Session, id: int) -> Company:
-        if not (company := self.repository.one(session, id)):
+        if not (company := self.company_repository.one(session, id)):
             raise CompanyNotFound(f"Company {id} was not found.")
 
         return company
 
     def update(self, session: Session, id: int, company_in: CompanyUpdate) -> Company:
-        if not self.repository.one(session, id):
+        if not self.company_repository.one(session, id):
             raise CompanyNotFound(f"Company {id} was not found.")
 
         if company_in.name.strip() == "":
             raise InvalidCompanyName("Invalid name, please try another.")
 
         company = Company(**company_in.dict())
-        return self.repository.replace(session, id, company)
+        return self.company_repository.replace(session, id, company)
 
     def delete(self, session: Session, id: int) -> None:
-        if not self.repository.one(session, id):
+        if not self.company_repository.one(session, id):
             raise CompanyNotFound(f"Company {id} was not found.")
 
-        self.repository.delete(session, id)
+        self.company_repository.delete(session, id)

@@ -6,4 +6,4 @@ from .service import CompanyService
 
 class CompanyContainer(containers.DeclarativeContainer):
     repository = providers.Singleton(CompanyRepository)
-    service = providers.Singleton(CompanyService, repository=repository)
+    service = providers.Singleton(CompanyService, repository)
