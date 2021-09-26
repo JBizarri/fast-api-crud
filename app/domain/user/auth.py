@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 from uuid import UUID
 
 import arrow
+import bcrypt
 import jwt
 
 if TYPE_CHECKING:
@@ -64,3 +65,11 @@ class JwtToken:
 
     def __post_init_post_parse__(self):
         self.authenticate(self.token)
+
+
+def generate_password(password: str) -> bytes:
+    return bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt())
+
+
+def check_password(password: bytes, hased_password: bytes) -> bool:
+    return bcrypt.checkpw(password, hased_password)

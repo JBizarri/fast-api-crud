@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..company.exceptions import CompanyNotFound
 from ..company.service import CompanyService
-from .auth import JwtToken
+from .auth import JwtToken, generate_password
 from .exceptions import InvalidUsername, LoginException, UserNotFound
 from .interfaces import UserCreate, UserLogin, UserUpdate
 from .models import User, UserStatus
@@ -38,7 +38,7 @@ class UserService:
             raise CompanyNotFound
 
         user_dict = user_in.dict()
-        hashed_password = User.generate_password(user_dict.pop("password"))
+        hashed_password = generate_password(user_dict.pop("password"))
         user_dict["password"] = hashed_password
 
         user = User(**user_dict, status=UserStatus.PENDING, company=company)

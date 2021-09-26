@@ -4,11 +4,11 @@ import enum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-import bcrypt
 from sqlalchemy import Column, Enum, ForeignKey, LargeBinary, String
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import UUIDType
 
+from .auth import check_password as _check_password
 from ...database import BaseModel
 from ..utils import AutoName
 
@@ -31,9 +31,5 @@ class User(BaseModel):
     company_id: UUID = Column(UUIDType, ForeignKey("company.id"), nullable=False)
     company: Company = relationship("Company", back_populates="users")
 
-    @staticmethod
-    def generate_password(password: str) -> bytes:
-        return bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt())
-
     def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(password.encode("utf8"), self.password)
+        return _check_password(password.encode("utf8"), self.password)
