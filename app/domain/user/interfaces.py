@@ -1,11 +1,12 @@
 from typing import Any, Dict, Protocol
+from uuid import UUID
 
 
 class UserCreate(Protocol):
     username: str
     password: str
     email: str
-    company_id: int
+    company_id: UUID
 
     def dict(self) -> Dict[str, Any]:
         pass

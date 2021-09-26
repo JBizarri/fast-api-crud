@@ -1,8 +1,6 @@
-from typing import List
+from uuid import UUID
 
 from pydantic import BaseModel
-
-from ..users.schemas import UserOutput
 
 
 class CompanyPost(BaseModel):
@@ -10,10 +8,8 @@ class CompanyPost(BaseModel):
 
 
 class CompanyOutput(BaseModel):
-    id: int
+    id: UUID
     name: str
-
-    users: List[UserOutput]
 
     class Config:
         orm_mode = True

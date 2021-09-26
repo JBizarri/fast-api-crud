@@ -1,6 +1,10 @@
+from __future__ import annotations
+
+import json
 import os
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from uuid import UUID
 
 import arrow
 import jwt
@@ -18,6 +22,13 @@ class ReservedField(Exception):
     pass
 
 
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return obj.hex
+        return json.JSONEncoder.default(self, obj)
+
+
 @dataclass
 class JwtToken:
     token: str
@@ -27,7 +38,7 @@ class JwtToken:
         cls,
         payload: Dict[str, Any],
         expiration: Optional[Union[arrow.Arrow, datetime]] = None,
-    ) -> "JwtToken":
+    ) -> JwtToken:
         if expiration:
             if payload.get("exp"):
                 raise ReservedField(
@@ -35,7 +46,11 @@ class JwtToken:
                 )
             payload["exp"] = expiration.timestamp()
 
-        return cls(jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM))
+        return cls(
+            jwt.encode(
+                payload, JWT_SECRET, algorithm=JWT_ALGORITHM, json_encoder=UUIDEncoder
+            )
+        )
 
     @staticmethod
     def authenticate(token: Union["JwtToken", str]) -> bool:

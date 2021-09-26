@@ -3,7 +3,7 @@ from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
-from .....database import get_session
+from ..... import get_session
 from .....domain.user.exceptions import LoginException
 from .....domain.user.service import UserService
 from ...containers import Container
@@ -28,5 +28,6 @@ async def user_login(
         return user_service.authenticate(session, login_info)
     except LoginException as exc:
         raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED, "You have entered an email or password."
+            status.HTTP_401_UNAUTHORIZED,
+            "You have entered an invalid email or password.",
         ) from exc

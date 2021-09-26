@@ -1,15 +1,19 @@
-from sqlalchemy import Column, Integer, String
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List
+
+from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
-from ...database import Base
+from ...database import BaseModel
+
+if TYPE_CHECKING:
+    from ..user.models import User
 
 
-class Company(Base):
-    __tablename__ = "company"
+class Company(BaseModel):
+    name: str = Column(String)
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-
-    users = relationship(
-        "User", back_populates="company", lazy=False, cascade="all, delete"
+    users: List[User] = relationship(
+        "User", back_populates="company", cascade="all, delete"
     )

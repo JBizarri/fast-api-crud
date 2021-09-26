@@ -1,15 +1,19 @@
+from __future__ import annotations
+
 import enum
+from typing import TYPE_CHECKING
+from uuid import UUID
 
 import bcrypt
-from sqlalchemy import Column, Enum, ForeignKey, Integer, LargeBinary, String
+from sqlalchemy import Column, Enum, ForeignKey, LargeBinary, String
 from sqlalchemy.orm import relationship
+from sqlalchemy_utils import UUIDType
 
-from ...database import Base
+from ...database import BaseModel
+from ..utils import AutoName
 
-
-class AutoName(enum.Enum):
-    def _generate_next_value_(name, start, count, last_values):
-        return name
+if TYPE_CHECKING:
+    from ..company.models import Company
 
 
 class UserStatus(str, AutoName):
@@ -18,17 +22,14 @@ class UserStatus(str, AutoName):
     PENDING = enum.auto()
 
 
-class User(Base):
-    __tablename__ = "user"
+class User(BaseModel):
+    email: str = Column(String, unique=True, index=True)
+    username: str = Column(String)
+    password: bytes = Column(LargeBinary)
+    status: UserStatus = Column(Enum(UserStatus), nullable=False)
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    username = Column(Integer)
-    password = Column(LargeBinary)
-    status = Column(Enum(UserStatus), nullable=False)
-
-    company_id = Column(Integer, ForeignKey("company.id"))
-    company = relationship("Company", back_populates="users", lazy=False)
+    company_id: UUID = Column(UUIDType, ForeignKey("company.id"), nullable=False)
+    company: Company = relationship("Company", back_populates="users")
 
     @staticmethod
     def generate_password(password: str) -> bytes:

@@ -1,11 +1,12 @@
 from typing import List, Optional
+from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Path, Query, status
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
-from .....database import get_session
+from ..... import get_session
 from .....domain.company.exceptions import CompanyNotFound
 from .....domain.user.exceptions import InvalidUsername, UserNotFound
 from .....domain.user.service import UserService
@@ -66,7 +67,7 @@ async def create_user(
 )
 @inject
 async def read_user(
-    user_id: int = Path(...),
+    user_id: UUID = Path(...),
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
 ):
@@ -83,7 +84,7 @@ async def read_user(
 )
 @inject
 async def update_user(
-    user_id: int = Path(...),
+    user_id: UUID = Path(...),
     user: UserPut = Body(...),
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
@@ -106,7 +107,7 @@ async def update_user(
 )
 @inject
 async def delete_user(
-    user_id: int = Path(...),
+    user_id: UUID = Path(...),
     session: Session = Depends(get_session),
     user_service: UserService = Depends(Provide[Container.user.service]),
 ):

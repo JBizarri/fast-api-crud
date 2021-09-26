@@ -1,11 +1,12 @@
 from typing import List
+from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Path, status
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
-from .....database import get_session
+from ..... import get_session
 from .....domain.company.exceptions import CompanyNotFound, InvalidCompanyName
 from .....domain.company.service import CompanyService
 from ...containers import Container
@@ -51,7 +52,7 @@ async def create_company(
 )
 @inject
 async def read_company(
-    company_id: int = Path(...),
+    company_id: UUID = Path(...),
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
 ):
@@ -70,7 +71,7 @@ async def read_company(
 )
 @inject
 async def update_company(
-    company_id: int = Path(...),
+    company_id: UUID = Path(...),
     company: CompanyPut = Body(...),
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
@@ -94,7 +95,7 @@ async def update_company(
 )
 @inject
 async def delete_company(
-    company_id: int = Path(...),
+    company_id: UUID = Path(...),
     session: Session = Depends(get_session),
     company_service: CompanyService = Depends(Provide[Container.company.service]),
 ):

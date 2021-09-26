@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -22,13 +23,13 @@ class CompanyService:
         company = Company(**company_in.dict())
         return self.company_repository.create(session, company)
 
-    def read_one(self, session: Session, id: int) -> Company:
+    def read_one(self, session: Session, id: UUID) -> Company:
         if not (company := self.company_repository.one(session, id)):
             raise CompanyNotFound
 
         return company
 
-    def update(self, session: Session, id: int, company_in: CompanyUpdate) -> Company:
+    def update(self, session: Session, id: UUID, company_in: CompanyUpdate) -> Company:
         if not self.company_repository.one(session, id):
             raise CompanyNotFound
 
@@ -38,7 +39,7 @@ class CompanyService:
         company = Company(**company_in.dict())
         return self.company_repository.replace(session, id, company)
 
-    def delete(self, session: Session, id: int) -> None:
+    def delete(self, session: Session, id: UUID) -> None:
         if not self.company_repository.one(session, id):
             raise CompanyNotFound
 
