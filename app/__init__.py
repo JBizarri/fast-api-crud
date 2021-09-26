@@ -6,18 +6,13 @@ from .database import Base, LocalSessionFactory, connect
 from .domain import create_initial_state
 
 SQL_URL = os.environ.get("SQL_URL")
-connection = connect(SQL_URL)
-get_session = LocalSessionFactory(connection)
+_connection = connect(SQL_URL)
+get_session = LocalSessionFactory(_connection)
 
+if os.environ.get("ENV") != "testing":
+    create_initial_state(Base, _connection)
 
-def create_app() -> FastAPI:
-    from .routers import mount_apis
+from .routers import mount_apis
 
-    app = FastAPI()
-    mount_apis(app)
-
-    create_initial_state(Base, connection)
-    return app
-
-
-app = create_app()
+app = FastAPI()
+mount_apis(app)
