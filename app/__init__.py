@@ -12,7 +12,7 @@ get_session = LocalSessionFactory(_connection)
 if os.environ.get("ENV") != "testing":
     create_initial_state(Base, _connection)
 
-from .routers import mount_apis
+from .routers import mount_apis  # noqa: E402
 
 app = FastAPI()
 mount_apis(app)
